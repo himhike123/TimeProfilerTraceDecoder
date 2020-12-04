@@ -25,10 +25,23 @@ class TimeProfilerUITests: XCTestCase {
     func testExample() throws {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
-        for _ in 1...2 {
+        for _ in 1...4 {
             app.launch()
             sleep(5)
             app.tap()
+            sleep(2)
+            XCTAssert(app.exists)
+        }
+    }
+
+    func testExample4() throws {
+        // UI tests must launch the application that they test.
+        let app = XCUIApplication()
+        for _ in 1...4 {
+            app.launch()
+            sleep(5)
+            app.tap()
+            sleep(2)
             XCTAssert(app.exists)
         }
     }

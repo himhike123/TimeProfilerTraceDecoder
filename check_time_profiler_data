@@ -10,7 +10,7 @@ APP_WORKSPACE="$APP_DIR/TimeProfiler.xcworkspace"
 APP_UI_TEST_PRINCIPAL_CLASS="PrincipalClass"
 APP_UI_TEST_PRINCIPAL_CLASS_FILE="$APP_DIR/$APP_UI_TEST_SCHEME/$APP_UI_TEST_PRINCIPAL_CLASS.swift"
 APP_UI_TEST_NAMES=( \
- 	"$APP_UI_TEST_SCHEME/TimeProfilerUITests/testExample" \
+ 	"$APP_UI_TEST_SCHEME/TimeProfilerUITests/testExample" "$APP_UI_TEST_SCHEME/TimeProfilerUITests/testExample4" \
 )
 DEVICE_UDID="adc1f1d241503473a9bc29696a89f37b87aef72c" # Enter 
 

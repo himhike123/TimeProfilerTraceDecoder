@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import csv
 
 
-def process_row(row_tag, thread_ref_dict):
+def process_row(row_tag):
     """
     <row>
         <sample-time id="1" fmt="00:29.312.581">29312581750</sample-time>
@@ -28,52 +28,42 @@ def process_row(row_tag, thread_ref_dict):
     :param tag:
     :return:
     """
-    fmt_thread = row_tag.findall('thread')[0].get('fmt', '')
-
-    if fmt_thread:
-        fmt_thread = fmt_thread.split(' (')[0]
-        thread_ref_dict[row_tag.findall('thread')[0].get('id')] = fmt_thread
-    else:
-        fmt_thread = thread_ref_dict.get(row_tag.findall('thread')[0].get('ref'))
-
     fmt_backtrace = row_tag.findall('backtrace')[0].get('fmt', 'unknown')
     fmt_sample_time = row_tag.findall('sample-time')[0].get('fmt')
+    return (fmt_sample_time, fmt_backtrace)
 
-    return (fmt_sample_time, fmt_thread, fmt_backtrace), thread_ref_dict
 
 def sort(sub_li):
     """
-    Sort rows on basis of sample time
+    sort rows on basis of sample time
     """
     sub_li.sort(key=lambda x: x[0])
     return sub_li
 
-def analyse(xmlfile: str, csvfile: str):
+
+def analyse(xmlFile: str, csvFile: str):
     """
     analyse a xml_file to a csv file
     :param xml_file:
     :param save_path:
-    :param process:
-    :return:
     """
-    tree = ET.parse(xmlfile)
+    tree = ET.parse(xmlFile)
     root = tree.getroot()
     row = []
-    thread_ref_dict = {}
     for row_tag in root[0][1:]:
-        data, thread_ref_dict = process_row(row_tag, thread_ref_dict)
+        data = process_row(row_tag)
         row.append(data)
     row_sorted = sort(row)
-    with open(csvfile, "w", newline="") as f:
+    with open(csvFile, "w", newline="") as f:
         writer = csv.writer(f)
-        headers = ['Sample time', 'Thread name', 'Backtrace']
+        headers = ['Sample time', 'Backtrace']
         writer.writerow(headers)
         writer.writerows(row_sorted)
-        print(row_sorted)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trace Decoder')
-    parser.add_argument('--xmlfile', type=str, default='recording',help='XML file')
-    parser.add_argument('--csvfile', type=str, default=0,help='csv file')
+    parser.add_argument('--xmlFile', type=str, default='recording',help='XML file with .xml')
+    parser.add_argument('--csvFile', type=str, default=0,help='csv file path with .csv')
     args = parser.parse_args()
-    analyse(args.xmlfile, args.csvfile)
+    analyse(args.xmlFile, args.csvFile)

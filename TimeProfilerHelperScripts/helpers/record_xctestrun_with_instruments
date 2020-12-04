@@ -28,7 +28,6 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # settings
 
 instrumentsTemplateName="TimeProfiler"
-traceParseUtility="$scriptDir/TraceUtilityFork/bin/TraceUtility"
 
 testPIDTimeout=30
 scriptTimeout=600 # 30 minutes
@@ -58,7 +57,7 @@ function pid_cpu_percent() {
 }
 
 function pid_of_process_name_containing() {
-	processName=$(echo "$1" | sed -E 's/^(.)(.*)/\[\1\]\2/') 
+	processName=$(echo "$1" | sed -E 's/^(.)(.*)/\[\1\]\2/') # so that we grep for string line '[L]eakify.app/Leakify', brackets help filter out self command in list of processes
 	foundPID=$(ps -A | grep "$processName" | head -n 1 | awk '{ print $1 }')
 	echo "$foundPID"
 }
@@ -85,7 +84,7 @@ function is_pid_active() {
 }
 
 function is_not_app_started() {
-	# appPID=$(pid_of_process_name_containing "$appName.app/$appName")--- for simulator
+	# appPID=$(pid_of_process_name_containing "$appName.app/$appName") for simulator
 	appPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfiler>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appPID" ]; then # if is empty
 		true;
@@ -97,8 +96,8 @@ function is_not_app_started() {
 }
 
 function is_not_app_runner_started() {
-	# appRunnerPID=$(pid_of_process_name_containing "$appRunnerName.app/$appRunnerName")---- for simulator
 	appRunnerPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfilerUITests.xctrunner>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
+	# appRunnerPID=$(pid_of_process_name_containing "$appRunnerName.app/$appRunnerName") for simulator
 	if [ -z "$appRunnerPID" ]; then # if is empty
 		true;
 	else
@@ -185,7 +184,7 @@ function cleanup_internal() {
 	kill $timeoutPID &>/dev/null
 	if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
 	    rm -rf "$traceRawPath" &>/dev/null
-	    rm -rf "$traceParsedPath" &>/dev/null
+	    rm -rf "$idevicesyslog" &>/dev/null
 	fi
 }
 trap cleanup EXIT
@@ -218,6 +217,7 @@ debug_print "testRunPath: $testRunPath"
 currentRunName="$appName-$(date +%Y%m%d%H%M%S)"
 traceRawPath="$reportsDir/${currentRunName}-${instrumentsTemplateName}.trace"
 traceParsedPath="$reportsDir/${currentRunName}-${instrumentsTemplateName}.xml"
+csvFile="$scriptDir/FinalReport/${currentRunName}-${instrumentsTemplateName}.csv"
 
 testLogPath="$buildDir/xcodebuild_test.log"
 instrumentsLogPath="$buildDir/instruments.log"
@@ -263,10 +263,10 @@ print_heading "5) Start instruments"
 xcrun xctrace record \
 		 	  --device "$deviceID" \
 		 	  --template "Time Profiler" \
-		 	  --time-limit 10m \
+		 	  --time-limit 1800s \
 		 	  --attach "$appPID" \
 		 	  --output "$traceRawPath" \
-			  > "$instrumentsLogPath" \
+		   	  > "$instrumentsLogPath" \
 			  2>&1 \
 		      &
 instrumentsPID=$!
@@ -307,28 +307,23 @@ debug_print "xcodebuildPID: $xcodebuildPID finished"
 ###########################################################################################################################
 
 print_heading "8) Wait until instruments PID finishes"
-sleep 10
 while is_pid_running $instrumentsPID ; do
 	is_running_instruments_healthy
 	exit_if_last_command_failed
 	sleep 1;
 done
-kill $instrumentsPID
 debug_print "instrumentsPID: $instrumentsPID finished"
 
 ###########################################################################################################################
 
 print_heading "9) Parse trace file"
-csvFile="$scriptDir/FinalReport/${currentRunName}-${instrumentsTemplateName}.csv"
 parsedTraceToStatistics="$scriptDir/TPDecoder.py"
-
-debug_print "\nOutput file Path: $statisticsFile\n"
 
 xcrun xctrace export \
 			  --input "$traceRawPath" \
 		      --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]' \
 		      --output "$traceParsedPath"
 
-python3 "$parsedTraceToStatistics" --xmlfile "$traceParsedPath" --csvfile "$csvFile"
+python3 "$parsedTraceToStatistics" --xmlFile "$traceParsedPath" --csvFile "$csvFile"
 
 exit $?

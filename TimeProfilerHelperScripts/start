@@ -105,8 +105,8 @@ function cleanup_internal() {
 	git checkout -- "$fileImplementingXCTestObservation"
 	if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
 		rm -rf "$currentRunReportDir"
+		rm -rf "$buildDir"
 	fi
-	rm -rf "$buildDir"
 }
 trap cleanup EXIT
 
@@ -188,8 +188,9 @@ currentRunName="$appName-$(date +%Y%m%d%H%M%S)"
 currentRunReportDir="$reportsDir/run-${currentRunName}"
 mkdir "$currentRunReportDir"
 debug_print "currentRunReportDir: $currentRunReportDir"
-
-for testName in $testNames
+# testNameArray=("TimeProfilerUITests/TimeProfilerUITests/testExample" "TimeProfilerUITests/TimeProfilerUITests/testExample4")
+# "${testNameArray[@]}"
+for testName in "$testNames"
 do
 	print_heading "Test Case: $testName"
 
