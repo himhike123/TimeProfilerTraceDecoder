@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Tool for automatic discovery of memory leaks in iOS apps runned by UI tests.
+# Tool for automatic discovery of time profiler in iOS apps runned by UI tests.
 
 ###########################################################################################################################
 

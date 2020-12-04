@@ -85,7 +85,7 @@ function is_pid_active() {
 }
 
 function is_not_app_started() {
-	# appPID=$(pid_of_process_name_containing "$appName.app/$appName")
+	# appPID=$(pid_of_process_name_containing "$appName.app/$appName")--- for simulator
 	appPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.MemoryLeaks>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appPID" ]; then # if is empty
 		true;
@@ -97,7 +97,7 @@ function is_not_app_started() {
 }
 
 function is_not_app_runner_started() {
-	# appRunnerPID=$(pid_of_process_name_containing "$appRunnerName.app/$appRunnerName")
+	# appRunnerPID=$(pid_of_process_name_containing "$appRunnerName.app/$appRunnerName")---- for simulator
 	appRunnerPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.MemoryLeaksUITests.xctrunner>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appRunnerPID" ]; then # if is empty
 		true;

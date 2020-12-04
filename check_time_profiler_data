@@ -20,13 +20,13 @@ then
       exit 1
 fi
 
-bash "$SCRIPT_DIR/memory-leak-tester/start"    \
+bash "$SCRIPT_DIR/TimeProfilerHelperScripts/start"    \
         "$APP_NAME" \
         "$APP_RUNNER_NAME" \
         "$APP_WORKSPACE" \
         "$APP_UI_TEST_SCHEME" \
-        ".memory-leak-tester-reports" \
-        ".memory-leak-tester-build" \
+        ".time-profiler-tester-reports" \
+        ".time-profiler-tester-build" \
         "$SIMULATOR_NAME" \
         "$APP_UI_TEST_PRINCIPAL_CLASS_FILE" \
         "$APP_UI_TEST_PRINCIPAL_CLASS" \
