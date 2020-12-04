@@ -15,6 +15,7 @@
 		72B9D52A257A4310002E6696 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72B9D528257A4310002E6696 /* LaunchScreen.storyboard */; };
 		72B9D535257A4310002E6696 /* TimeProfilerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B9D534257A4310002E6696 /* TimeProfilerTests.swift */; };
 		72B9D540257A4310002E6696 /* TimeProfilerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B9D53F257A4310002E6696 /* TimeProfilerUITests.swift */; };
+		72B9D565257A48DC002E6696 /* PrincipalClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B9D564257A48DC002E6696 /* PrincipalClass.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +50,7 @@
 		72B9D53B257A4310002E6696 /* TimeProfilerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeProfilerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		72B9D53F257A4310002E6696 /* TimeProfilerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProfilerUITests.swift; sourceTree = "<group>"; };
 		72B9D541257A4310002E6696 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		72B9D564257A48DC002E6696 /* PrincipalClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrincipalClass.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +124,7 @@
 		72B9D53E257A4310002E6696 /* TimeProfilerUITests */ = {
 			isa = PBXGroup;
 			children = (
+				72B9D564257A48DC002E6696 /* PrincipalClass.swift */,
 				72B9D53F257A4310002E6696 /* TimeProfilerUITests.swift */,
 				72B9D541257A4310002E6696 /* Info.plist */,
 			);
@@ -277,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				72B9D540257A4310002E6696 /* TimeProfilerUITests.swift in Sources */,
+				72B9D565257A48DC002E6696 /* PrincipalClass.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
