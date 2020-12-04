@@ -6,8 +6,8 @@ readonly PROGNAME=$(basename $0)
 
 # read parameters
 
-if [ $# -ne 8 ]; then
-	printf "\nusage: $PROGNAME [appName] [appRunnerName] [reportsDir] [buildDir] [deviceID] [testName] [VERBOSE] [KEEP_RAW_REPORT_DATA]"
+if [ $# -ne 10 ]; then
+	printf "\nusage: $PROGNAME [appName] [appRunnerName] [reportsDir] [buildDir] [deviceID] [testName] [VERBOSE] [KEEP_RAW_REPORT_DATA] [appScheme] [helperfile]"
 	printf "\n\n"
 	exit 1;
 fi
@@ -20,6 +20,8 @@ deviceID="$5"
 testName="$6"
 VERBOSE="$7"
 KEEP_RAW_REPORT_DATA="$8"
+appScheme="$9"
+helperfile="$10"
 
 # current script directory
 
@@ -86,7 +88,7 @@ function is_pid_active() {
 
 function is_not_app_started() {
 	# appPID=$(pid_of_process_name_containing "$appName.app/$appName")--- for simulator
-	appPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.MemoryLeaks>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
+	appPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfiler>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appPID" ]; then # if is empty
 		true;
 	else
@@ -98,7 +100,7 @@ function is_not_app_started() {
 
 function is_not_app_runner_started() {
 	# appRunnerPID=$(pid_of_process_name_containing "$appRunnerName.app/$appRunnerName")---- for simulator
-	appRunnerPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.MemoryLeaksUITests.xctrunner>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
+	appRunnerPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfilerUITests.xctrunner>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appRunnerPID" ]; then # if is empty
 		true;
 	else
@@ -266,6 +268,8 @@ xcrun xctrace record \
 		 	  --time-limit 10m \
 		 	  --attach "$appPID" \
 		 	  --output "$traceRawPath" \
+			  > "$instrumentsLogPath" \
+			  2>&1 \
 		      &
 instrumentsPID=$!
 debug_print "instrumentsPID: $instrumentsPID"
@@ -306,25 +310,27 @@ debug_print "xcodebuildPID: $xcodebuildPID finished"
 
 print_heading "8) Wait until instruments PID finishes"
 sleep 10
-# while is_pid_running $instrumentsPID ; do
-# 	is_running_instruments_healthy
-# 	exit_if_last_command_failed
-# 	sleep 1;
-# done
+while is_pid_running $instrumentsPID ; do
+	is_running_instruments_healthy
+	exit_if_last_command_failed
+	sleep 1;
+done
 kill $instrumentsPID
 debug_print "instrumentsPID: $instrumentsPID finished"
 
 ###########################################################################################################################
 
 print_heading "9) Parse trace file"
+statisticsFile="$scriptDir/FinalReport/${currentRunName}-${instrumentsTemplateName}.csv"
+parsedTraceToStatistics="$scriptDir/TPDecoder.py"
+
+debug_print "statisticsFile: $statisticsFile"
+debug_print "parsedTraceToStatistics: $parsedTraceToStatistics"
+
 xcrun xctrace export \
 			  --input "$traceRawPath" \
 		      --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]' \
 		      --output "$traceParsedPath"
-statisticsFile="$reportsDir/${currentRunName}-${instrumentsTemplateName}.csv"
-parsedTraceToStatistics="$scriptDir/TraceDecoder.py"
-debug_print "statisticsFile: $statisticsFile"
-debug_print "parsedTraceToStatistics: $parsedTraceToStatistics"
 python3 "$parsedTraceToStatistics" --xmlfile "$traceParsedPath" --csvfile "$statisticsFile"
 
 exit $?

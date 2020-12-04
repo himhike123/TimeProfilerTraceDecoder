@@ -8,8 +8,8 @@ readonly PROGNAME=$(basename $0)
 
 # read parameters
 
-if [ $# -ne 10 ]; then
-	printf "\nusage: $PROGNAME [appName] [appRunnerName] [appWorkspace] [appScheme] [reportsDir] [buildDir] [deviceName] [file implementing XCTestObservation] [class implementing XCTestObservation] [list of test names]"
+if [ $# -ne 11 ]; then
+	printf "\nusage: $PROGNAME [appName] [appRunnerName] [appWorkspace] [appScheme] [reportsDir] [buildDir] [deviceID] [file implementing XCTestObservation] [class implementing XCTestObservation] [list of test names] [helperfile]"
 	printf "\n\n"
 	exit 1;
 fi
@@ -20,10 +20,11 @@ appWorkspace="$3"
 appScheme="$4"
 reportsDir="$5"
 buildDir="$6"
-deviceName="$7"
+deviceID="$7"
 fileImplementingXCTestObservation="$8"
 classNameImplementingXCTestObservation="$9"
 testNames="${10}"
+helperfile="$11"
 
 VERBOSE=1
 KEEP_RAW_REPORT_DATA=0 # will keep raw trace files, thus might need several GB of free space, only for debugging
@@ -103,9 +104,9 @@ function cleanup_internal() {
 	kill $timeoutPID &>/dev/null
 	debug_print "git checkout -- $fileImplementingXCTestObservation"
 	git checkout -- "$fileImplementingXCTestObservation"
-	# if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
-	# 	rm -rf "$currentRunReportDir"
-	# fi
+	if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
+		rm -rf "$currentRunReportDir"
+	fi
 }
 trap cleanup EXIT
 
@@ -143,7 +144,6 @@ debug_print "timeoutPID: $timeoutPID"
 
 print_heading "2) Restart device" "Why? To prevent by mistake attaching to incorrect instance of app."
 
-deviceID=adc1f1d241503473a9bc29696a89f37b87aef72c
 echo "Found deviceID: $deviceID"
 destination="id=$deviceID"
 debug_print "destination: $destination"
@@ -200,29 +200,11 @@ do
 	                                    "$deviceID" \
 	                                    "$testName" \
 										"$VERBOSE" \
-										"$KEEP_RAW_REPORT_DATA"
+										"$KEEP_RAW_REPORT_DATA" \
+										"$appScheme" \
+										"$helperfile"
 done
 
 ###########################################################################################################################
-
-# print_heading "6) Statistics from parsed trace files"
-
-# statisticsFile="$reportsDir/${currentRunName}.stats.csv"
-# python python_script.py var1 statisticsFile
-
-
-# swift "$parsedTraceToStatistics" "$currentRunReportDir" "$statisticsFile"
-# if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
-# 	rm -rf "$currentRunReportDir"
-# fi
-# debug_print "statisticsFile: $statisticsFile"
-
-# ##########################################################################################################################
-
-# print_heading "7) Found any leaks in last run?"
-
-# # find last n statistics
-# lastStatisticsFiles=`find "$reportsDir/"*.stats.plist -type f | sort | tail -30`
-# swift "$measureStatisticsNovelty" $lastStatisticsFiles
 
 exit $?
