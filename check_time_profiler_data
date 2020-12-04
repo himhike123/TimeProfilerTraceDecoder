@@ -13,7 +13,6 @@ APP_UI_TEST_NAMES=( \
  	"$APP_UI_TEST_SCHEME/TimeProfilerUITests/testExample" \
 )
 DEVICE_UDID="adc1f1d241503473a9bc29696a89f37b87aef72c" # Enter 
-HELPER_FILE="$APP_DIR/TimeProfilerHelperScripts/helpers/TPDecoder.py"
 
 bash "$SCRIPT_DIR/TimeProfilerHelperScripts/start"    \
         "$APP_NAME" \
@@ -25,5 +24,4 @@ bash "$SCRIPT_DIR/TimeProfilerHelperScripts/start"    \
         "$DEVICE_UDID" \
         "$APP_UI_TEST_PRINCIPAL_CLASS_FILE" \
         "$APP_UI_TEST_PRINCIPAL_CLASS" \
-        "$APP_UI_TEST_NAMES" \
-        "$HELPER_FILE"
+        "$APP_UI_TEST_NAMES"

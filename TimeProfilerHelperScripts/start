@@ -8,8 +8,8 @@ readonly PROGNAME=$(basename $0)
 
 # read parameters
 
-if [ $# -ne 11 ]; then
-	printf "\nusage: $PROGNAME [appName] [appRunnerName] [appWorkspace] [appScheme] [reportsDir] [buildDir] [deviceID] [file implementing XCTestObservation] [class implementing XCTestObservation] [list of test names] [helperfile]"
+if [ $# -ne 10 ]; then
+	printf "\nusage: $PROGNAME [appName] [appRunnerName] [appWorkspace] [appScheme] [reportsDir] [buildDir] [deviceID] [file implementing XCTestObservation] [class implementing XCTestObservation] [list of test names]"
 	printf "\n\n"
 	exit 1;
 fi
@@ -24,7 +24,6 @@ deviceID="$7"
 fileImplementingXCTestObservation="$8"
 classNameImplementingXCTestObservation="$9"
 testNames="${10}"
-helperfile="$11"
 
 VERBOSE=1
 KEEP_RAW_REPORT_DATA=0 # will keep raw trace files, thus might need several GB of free space, only for debugging
@@ -107,6 +106,7 @@ function cleanup_internal() {
 	if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
 		rm -rf "$currentRunReportDir"
 	fi
+	rm -rf "$buildDir"
 }
 trap cleanup EXIT
 
@@ -200,9 +200,8 @@ do
 	                                    "$deviceID" \
 	                                    "$testName" \
 										"$VERBOSE" \
-										"$KEEP_RAW_REPORT_DATA" \
-										"$appScheme" \
-										"$helperfile"
+										"$KEEP_RAW_REPORT_DATA"
+
 done
 
 ###########################################################################################################################

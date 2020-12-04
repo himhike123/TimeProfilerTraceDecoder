@@ -6,8 +6,8 @@ readonly PROGNAME=$(basename $0)
 
 # read parameters
 
-if [ $# -ne 10 ]; then
-	printf "\nusage: $PROGNAME [appName] [appRunnerName] [reportsDir] [buildDir] [deviceID] [testName] [VERBOSE] [KEEP_RAW_REPORT_DATA] [appScheme] [helperfile]"
+if [ $# -ne 8 ]; then
+	printf "\nusage: $PROGNAME [appName] [appRunnerName] [reportsDir] [buildDir] [deviceID] [testName] [VERBOSE] [KEEP_RAW_REPORT_DATA]"
 	printf "\n\n"
 	exit 1;
 fi
@@ -20,8 +20,6 @@ deviceID="$5"
 testName="$6"
 VERBOSE="$7"
 KEEP_RAW_REPORT_DATA="$8"
-appScheme="$9"
-helperfile="$10"
 
 # current script directory
 
@@ -321,16 +319,16 @@ debug_print "instrumentsPID: $instrumentsPID finished"
 ###########################################################################################################################
 
 print_heading "9) Parse trace file"
-statisticsFile="$scriptDir/FinalReport/${currentRunName}-${instrumentsTemplateName}.csv"
+csvFile="$scriptDir/FinalReport/${currentRunName}-${instrumentsTemplateName}.csv"
 parsedTraceToStatistics="$scriptDir/TPDecoder.py"
 
-debug_print "statisticsFile: $statisticsFile"
-debug_print "parsedTraceToStatistics: $parsedTraceToStatistics"
+debug_print "\nOutput file Path: $statisticsFile\n"
 
 xcrun xctrace export \
 			  --input "$traceRawPath" \
 		      --xpath '/trace-toc/run[@number="1"]/data/table[@schema="time-profile"]' \
 		      --output "$traceParsedPath"
-python3 "$parsedTraceToStatistics" --xmlfile "$traceParsedPath" --csvfile "$statisticsFile"
+
+python3 "$parsedTraceToStatistics" --xmlfile "$traceParsedPath" --csvfile "$csvFile"
 
 exit $?
