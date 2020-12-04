@@ -27,7 +27,9 @@ scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # settings
 
-instrumentsTemplateName="TimeProfiler"
+instrumentsTemplateName="DetectTimeProfiling"
+instrumentsTraceTemplate="Time Profiler" # Default Apple template for leaks.
+traceParseUtility="$scriptDir/TraceUtilityFork/bin/TraceUtility"
 
 testPIDTimeout=30
 scriptTimeout=600 # 30 minutes
@@ -57,7 +59,7 @@ function pid_cpu_percent() {
 }
 
 function pid_of_process_name_containing() {
-	processName=$(echo "$1" | sed -E 's/^(.)(.*)/\[\1\]\2/') # so that we grep for string line '[L]eakify.app/Leakify', brackets help filter out self command in list of processes
+	processName=$(echo "$1" | sed -E 's/^(.)(.*)/\[\1\]\2/') 
 	foundPID=$(ps -A | grep "$processName" | head -n 1 | awk '{ print $1 }')
 	echo "$foundPID"
 }
@@ -84,7 +86,6 @@ function is_pid_active() {
 }
 
 function is_not_app_started() {
-	# appPID=$(pid_of_process_name_containing "$appName.app/$appName") for simulator
 	appPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfiler>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appPID" ]; then # if is empty
 		true;
@@ -96,8 +97,7 @@ function is_not_app_started() {
 }
 
 function is_not_app_runner_started() {
-	appRunnerPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfilerUITests.xctrunner>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
-	# appRunnerPID=$(pid_of_process_name_containing "$appRunnerName.app/$appRunnerName") for simulator
+	appRunnerPID=$(cat $deviceLogsPath | awk '{ if($6 ~ /application<com.example.TimeProfilerUITests>:/) print $6}' | cut -d ":" -f2 | cut -d "]" -f1 | sort | uniq)
 	if [ -z "$appRunnerPID" ]; then # if is empty
 		true;
 	else
@@ -182,9 +182,9 @@ function cleanup_internal() {
 	kill -CONT $launchdSimPID &>/dev/null
 	debug_print "timeoutPID: kill $timeoutPID"
 	kill $timeoutPID &>/dev/null
+	rm -rf "$deviceLogsPath" &>/dev/null
 	if [ $KEEP_RAW_REPORT_DATA -eq "0" ]; then
 	    rm -rf "$traceRawPath" &>/dev/null
-	    rm -rf "$idevicesyslog" &>/dev/null
 	fi
 }
 trap cleanup EXIT
@@ -252,23 +252,19 @@ while is_not_app_started "$appName"; do true; done
 
 ###########################################################################################################################
 
-print_heading "4) Pause app runner until instruments are ready"
-debug_print "kill -STOP $appRunnerPID"
-kill -STOP $appRunnerPID
+# Put enough time in XCUITest for instruments to stable. Commented code works only for simulator
+# print_heading "4) Pause app runner until instruments are ready"
+# debug_print "kill -STOP $appRunnerPID"
+# kill -STOP $appRunnerPID
 
 ###########################################################################################################################
 
 print_heading "5) Start instruments"
-
-xcrun xctrace record \
-		 	  --device "$deviceID" \
-		 	  --template "Time Profiler" \
-		 	  --time-limit 1800s \
-		 	  --attach "$appPID" \
-		 	  --output "$traceRawPath" \
-		   	  > "$instrumentsLogPath" \
-			  2>&1 \
-		      &
+xcrun xctrace record --device "$deviceID" \
+			--template "$instrumentsTraceTemplate" \
+			--attach "$appPID" \
+			--output "$traceRawPath" \
+			&
 instrumentsPID=$!
 debug_print "instrumentsPID: $instrumentsPID"
 
@@ -276,12 +272,9 @@ debug_print "instrumentsPID: $instrumentsPID"
 
 print_heading "6) Wait until instruments idle, then resume test"
 
-while is_pid_active $instrumentsPID; do
-	true;
-done
-
-debug_print "kill -CONT $appRunnerPID"
-kill -CONT $appRunnerPID
+# Commented code works only for simulator
+# debug_print "kill -CONT $appRunnerPID"
+# kill -CONT $appRunnerPID
 
 ##########################################################################################################################
 
@@ -317,6 +310,7 @@ debug_print "instrumentsPID: $instrumentsPID finished"
 ###########################################################################################################################
 
 print_heading "9) Parse trace file"
+
 parsedTraceToStatistics="$scriptDir/TPDecoder.py"
 
 xcrun xctrace export \
@@ -325,5 +319,6 @@ xcrun xctrace export \
 		      --output "$traceParsedPath"
 
 python3 "$parsedTraceToStatistics" --xmlFile "$traceParsedPath" --csvFile "$csvFile"
+exit_if_last_command_failed
 
 exit $?
