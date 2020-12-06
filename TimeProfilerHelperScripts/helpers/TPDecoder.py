@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import csv
 
 
-def process_row(row_tag):
+def process_row(row_tag, weight_ref_dict):
     """
     <row>
         <sample-time id="1" fmt="00:29.312.581">29312581750</sample-time>
@@ -26,44 +26,54 @@ def process_row(row_tag):
         </backtrace>
     </row>
     :param tag:
+    :Fetch value of self execution time and method
     :return:
     """
+    fmt_weight = row_tag.findall('weight')[0].get('fmt', '')
+    if fmt_weight:
+            weight_ref_dict[row_tag.findall('weight')[0].get('id')] = fmt_weight
+    else:
+            fmt_weight = weight_ref_dict.get(row_tag.findall('weight')[0].get('ref'))
     fmt_backtrace = row_tag.findall('backtrace')[0].get('fmt', 'unknown')
-    fmt_sample_time = row_tag.findall('sample-time')[0].get('fmt')
-    return (fmt_sample_time, fmt_backtrace)
+    fmt_backtrace_b = fmt_backtrace.split('←')[0]
+    return (fmt_weight, fmt_backtrace_b), weight_ref_dict
 
 
 def sort(sub_li):
     """
-    sort rows on basis of sample time
+    Sort rows on basis of sample time in descending order of self execution time
     """
-    sub_li.sort(key=lambda x: x[0])
+    sub_li.sort(key=lambda x: x[0], reverse=True)
     return sub_li
 
 
 def analyse(xmlFile: str, csvFile: str):
     """
-    analyse a xml_file to a csv file
+    analyse a xml_file and store it to a csv file
     :param xml_file:
     :param save_path:
+    :param process:
+    :return:
     """
     tree = ET.parse(xmlFile)
     root = tree.getroot()
     row = []
+    weight_ref_dict = {}
     for row_tag in root[0][1:]:
-        data = process_row(row_tag)
+        data, weight_ref_dict = process_row(row_tag, weight_ref_dict)
         row.append(data)
     row_sorted = sort(row)
     with open(csvFile, "w", newline="") as f:
         writer = csv.writer(f)
-        headers = ['Sample time', 'Backtrace']
+        headers = ['Weight', 'Method name']
         writer.writerow(headers)
         writer.writerows(row_sorted)
-
+        print(row_sorted)
+        print('\n')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trace Decoder')
-    parser.add_argument('--xmlFile', type=str, default='recording',help='XML file with .xml')
-    parser.add_argument('--csvFile', type=str, default=0,help='csv file path with .csv')
+    parser.add_argument('--xmlFile', type=str, default='recording',help='XML file')
+    parser.add_argument('--csvFile', type=str, default=0,help='csv file')
     args = parser.parse_args()
     analyse(args.xmlFile, args.csvFile)
